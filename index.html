@@ -1,0 +1,244 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Colorful Heart ❤️</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: black;
+            overflow: hidden;
+            width: 100vw;
+            height: 100vh;
+        }
+
+        canvas {
+            display: block;
+            width: 100vw;
+            height: 100vh;
+        }
+    </style>
+</head>
+
+<body>
+
+<canvas id="heartCanvas"></canvas>
+
+<script>
+
+const canvas = document.getElementById("heartCanvas");
+const ctx = canvas.getContext("2d");
+
+function resizeCanvas() {
+    canvas.width = window.innerWidth;
+    canvas.height = window.innerHeight;
+}
+
+resizeCanvas();
+
+window.addEventListener("resize", resizeCanvas);
+
+
+// Same colors as your Python program
+const colors = [
+    "red",
+    "blue",
+    "lime",
+    "yellow",
+    "cyan",
+    "magenta",
+    "orange",
+    "pink"
+];
+
+
+// Random color
+function randomColor() {
+    return colors[Math.floor(Math.random() * colors.length)];
+}
+
+
+// Heart equation
+function heartPoint(angle) {
+
+    const x =
+        16 * Math.pow(Math.sin(angle), 3) * 15;
+
+    const y =
+        (
+            13 * Math.cos(angle)
+            - 5 * Math.cos(2 * angle)
+            - 2 * Math.cos(3 * angle)
+            - Math.cos(4 * angle)
+        ) * 15;
+
+    return {
+        x: x,
+        y: y
+    };
+}
+
+
+// Store all drawing lines
+const lines = [];
+
+
+// Same as:
+// for i in range(120)
+for (let i = 0; i < 120; i++) {
+
+    const angle =
+        i * (Math.PI * 2) / 120;
+
+    const point = heartPoint(angle);
+
+    const color = randomColor();
+
+    /*
+       Python:
+       
+       t.goto(x, y)
+
+       for _ in range(8):
+           t.forward(6)
+           t.backward(6)
+           t.right(45)
+
+       This creates the small 8-direction burst.
+    */
+
+    for (let j = 0; j < 8; j++) {
+
+        const burstAngle =
+            j * (Math.PI * 2) / 8;
+
+        const startX = point.x;
+        const startY = point.y;
+
+        const endX =
+            startX + Math.cos(burstAngle) * 6;
+
+        const endY =
+            startY + Math.sin(burstAngle) * 6;
+
+        lines.push({
+            startX: startX,
+            startY: startY,
+            endX: endX,
+            endY: endY,
+            color: color,
+            progress: 0
+        });
+    }
+}
+
+
+// Animation
+let animationStart = null;
+
+function animate(timestamp) {
+
+    if (!animationStart) {
+        animationStart = timestamp;
+    }
+
+    const elapsed =
+        timestamp - animationStart;
+
+    // Clear screen
+    ctx.fillStyle = "black";
+    ctx.fillRect(
+        0,
+        0,
+        canvas.width,
+        canvas.height
+    );
+
+
+    // Center of screen
+    const centerX =
+        canvas.width / 2;
+
+    const centerY =
+        canvas.height / 2;
+
+
+    /*
+       Slowly draw the heart.
+       The timing creates the same progressive
+       drawing feeling as Turtle.
+    */
+
+    const totalDuration = 5000;
+
+    const progress =
+        Math.min(
+            elapsed / totalDuration,
+            1
+        );
+
+
+    const visibleLines =
+        Math.floor(
+            lines.length * progress
+        );
+
+
+    for (let i = 0; i < visibleLines; i++) {
+
+        const line = lines[i];
+
+        ctx.beginPath();
+
+        ctx.moveTo(
+            centerX + line.startX,
+            centerY - line.startY
+        );
+
+        ctx.lineTo(
+            centerX + line.endX,
+            centerY - line.endY
+        );
+
+
+        ctx.strokeStyle = line.color;
+
+        ctx.lineWidth = 1;
+
+        ctx.stroke();
+    }
+
+
+    // Restart animation
+    if (progress >= 1) {
+
+        setTimeout(() => {
+
+            animationStart = null;
+
+            requestAnimationFrame(animate);
+
+        }, 800);
+
+        return;
+    }
+
+
+    requestAnimationFrame(animate);
+}
+
+
+requestAnimationFrame(animate);
+
+</script>
+
+</body>
+</html>
